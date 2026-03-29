@@ -70,6 +70,7 @@ import com.wakeforge.app.presentation.navigation.Route
  * 5. **About**: Privacy policy, app version, open source licenses
  * 6. **Danger Zone**: Reset settings, clear all data (with confirmation dialogs)
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController? = null,

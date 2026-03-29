@@ -63,7 +63,7 @@ class AdManager @Inject constructor(
                 Log.d(
                     TAG,
                     "Adapter: $adapterClass, Status: ${status?.initializationState?.name}, " +
-                        "Latency: ${status?.latencyMillis}ms"
+                        "Description: ${status?.description}"
                 )
             }
             isInitialized = true

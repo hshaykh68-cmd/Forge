@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Snooze
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -72,6 +73,7 @@ import com.wakeforge.app.presentation.stats.components.WeeklyBarChart
  * 4. **Quick Stats Grid**: 2×2 grid of stat cards (snoozes, failures, avg snooze, monthly rate)
  * 5. **Insights**: Best day, most used mission, motivational message
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(
     navController: NavController? = null,

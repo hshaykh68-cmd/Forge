@@ -414,7 +414,7 @@ fun CreateAlarmScreen(
                     smartEscalation = state.smartEscalationEnabled,
                     onIntervalChange = viewModel::updateSnoozeInterval,
                     onMaxCountChange = viewModel::updateMaxSnoozeCount,
-                    onEscalationToggle = viewModel::toggleSmartEscalation,
+                    onEscalationToggle = { viewModel.toggleSmartEscalation() },
                 )
             }
 
