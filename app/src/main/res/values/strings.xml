@@ -14,19 +14,32 @@
     <string name="nav_settings">Settings</string>
 
     <!-- ================================================================ -->
-    <!-- Onboarding                                                       -->
+    <!-- Onboarding - Premium 5-Page Flow                                   -->
     <!-- ================================================================ -->
-    <string name="onboarding_title_1">Forge Your Morning</string>
-    <string name="onboarding_description_1">WakeForge transforms your mornings with smart alarms that demand full consciousness before dismissing.</string>
-    <string name="onboarding_title_2">Challenge to Dismiss</string>
-    <string name="onboarding_description_2">Complete missions like math problems, memory games, or shake challenges to prove you are truly awake.</string>
-    <string name="onboarding_title_3">Track Your Progress</string>
-    <string name="onboarding_description_3">Monitor your wake-up streaks, success rates, and snooze habits to build a better morning routine.</string>
-    <string name="onboarding_title_4">Take Control</string>
-    <string name="onboarding_description_4">Customize difficulty, sounds, snooze behavior, and more. Upgrade to Premium for unlimited alarms and advanced missions.</string>
+    <string name="onboarding_title_1">WakeForge</string>
+    <string name="onboarding_description_1">Transform your mornings with intelligent alarms that demand full consciousness.</string>
+    <string name="onboarding_hint_1">Tap Begin Journey to get started</string>
+
+    <string name="onboarding_title_2">Challenge to Wake</string>
+    <string name="onboarding_description_2">Complete missions like math problems, memory patterns, or shake challenges to prove you are truly awake.</string>
+    <string name="onboarding_hint_2">No more accidental snoozing</string>
+
+    <string name="onboarding_title_3">Track Your Streak</string>
+    <string name="onboarding_description_3">Monitor your wake-up streaks, success rates, and build an unbreakable morning routine.</string>
+    <string name="onboarding_hint_3">Every day counts towards your goals</string>
+
+    <string name="onboarding_title_4">Smart Features</string>
+    <string name="onboarding_description_4">Gradual volume increase, intelligent snooze limits, and personalized sleep goals.</string>
+    <string name="onboarding_hint_4">Customize everything in settings</string>
+
+    <string name="onboarding_title_5">Ready to Forge?</string>
+    <string name="onboarding_description_5">Your mornings are about to change forever. Let us set up your first smart alarm.</string>
+
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_next">Next</string>
+    <string name="onboarding_begin_journey">Begin Journey</string>
     <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_see_more">See More Features</string>
     <string name="onboarding_page_indicator">%1$d of %2$d</string>
 
     <!-- ================================================================ -->

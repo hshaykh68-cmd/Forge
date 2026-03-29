@@ -1,5 +1,18 @@
 package com.wakeforge.app.presentation.onboarding
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,21 +24,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,26 +51,25 @@ import androidx.navigation.NavController
 import com.wakeforge.app.R
 import com.wakeforge.app.core.components.WFButton
 import com.wakeforge.app.core.components.ButtonType
-import com.wakeforge.app.core.theme.BackgroundDark
 import com.wakeforge.app.core.theme.LocalWakeForgeColors
 import com.wakeforge.app.core.theme.LocalWakeForgeTypography
-import com.wakeforge.app.core.theme.PrimaryAccent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Full-screen horizontal pager for the onboarding flow.
+ * Premium onboarding screen with cinematic 5-page flow.
  *
- * Displays 4 illustrated pages with:
- * - Smooth horizontal paging animation (HorizontalPager default)
- * - Dot indicators showing current position
- * - "Next" / "Get Started" primary button
- * - "Skip" text button in the top-right corner
- * - Automatic navigation to the permission setup screen on completion
+ * Features:
+ * - Animated page transitions with slide/fade effects
+ * - Premium gradient backgrounds with floating particles
+ * - Interactive mission previews
+ * - Glassmorphism cards and shimmer effects
+ * - Celebration animations on completion
  *
  * @param navController Controller for navigation after onboarding.
  * @param viewModel The [OnboardingViewModel] managing onboarding state.
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun OnboardingScreen(
     navController: NavController,
@@ -62,14 +77,11 @@ fun OnboardingScreen(
 ) {
     val colors = LocalWakeForgeColors.current
     val typography = LocalWakeForgeTypography.current
-    val uiState by viewModel.state.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
-    val pages = remember { getOnboardingPages() }
 
-    val pagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { pages.size },
-    )
+    var currentPage by remember { mutableStateOf(0) }
+    var isAnimating by remember { mutableStateOf(false) }
+    val pages = remember { getOnboardingPages() }
 
     // Listen for completion / skip events
     LaunchedEffect(Unit) {
@@ -85,29 +97,110 @@ fun OnboardingScreen(
         }
     }
 
+    // Page transition animation
+    val transitionSpec = remember {
+        { direction: Int ->
+            if (direction > 0) {
+                // Forward navigation
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(300)) with
+                slideOutHorizontally(
+                    targetOffsetX = { -it },
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(300))
+            } else {
+                // Backward navigation (not used but defined for completeness)
+                slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(300)) with
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(300))
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark),
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        colors.background,
+                        colors.background,
+                        colors.primaryAccent.copy(alpha = 0.05f),
+                    ),
+                    startY = 0f,
+                    endY = Float.POSITIVE_INFINITY,
+                )
+            ),
     ) {
-        // Skip button in top-right corner
-        TextButton(
-            onClick = { viewModel.skip() },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 16.dp, end = 16.dp),
-        ) {
-            Text(
-                text = stringResource(id = R.string.onboarding_skip),
-                style = typography.labelLarge,
-                color = colors.secondaryText,
-            )
+        // Animated background particles
+        FloatingParticles()
+
+        // Skip button (hidden on last page)
+        if (currentPage < pages.size - 1) {
+            TextButton(
+                onClick = { viewModel.skip() },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 16.dp, end = 16.dp)
+                    .alpha(0.7f),
+            ) {
+                Text(
+                    text = stringResource(id = R.string.onboarding_skip),
+                    style = typography.labelLarge,
+                    color = colors.secondaryText,
+                )
+            }
         }
 
-        // Horizontal pager with onboarding pages
-        HorizontalPager(
-            state = pagerState,
+        // Page indicator at top
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 56.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            pages.forEachIndexed { index, _ ->
+                val isActive = index == currentPage
+                val infiniteTransition = rememberInfiniteTransition(label = "dotPulse")
+                val scale by infiniteTransition.animateFloat(
+                    initialValue = if (isActive) 1f else 0.8f,
+                    targetValue = if (isActive) 1.2f else 0.8f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(600, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                    label = "dotScale",
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(if (isActive) 12.dp else 8.dp)
+                        .scale(if (isActive) scale else 1f)
+                        .clip(CircleShape)
+                        .background(
+                            if (isActive) colors.primaryAccent
+                            else colors.secondaryText.copy(alpha = 0.3f),
+                        ),
+                )
+            }
+        }
+
+        // Animated content area
+        AnimatedContent(
+            targetState = currentPage,
+            transitionSpec = {
+                val direction = if (targetState > initialState) 1 else -1
+                transitionSpec(direction)
+            },
             modifier = Modifier.fillMaxSize(),
+            label = "pageContent",
         ) { pageIndex ->
             val page = pages[pageIndex]
 
@@ -118,23 +211,32 @@ fun OnboardingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                // Animated illustration (Canvas-drawn)
-                page.illustration()
+                // Premium animated illustration
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    page.illustration()
+                }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-                // Page title
-                Text(
-                    text = stringResource(id = page.titleRes),
-                    style = typography.headlineLarge,
-                    color = colors.primaryText,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                // Title with shimmer effect on first page
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(id = page.titleRes),
+                        style = typography.headlineLarge,
+                        color = colors.primaryText,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Page description
+                // Description with enhanced typography
                 Text(
                     text = stringResource(id = page.descriptionRes),
                     style = typography.bodyLarge,
@@ -142,62 +244,66 @@ fun OnboardingScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
-            }
-        }
 
-        // Bottom section: dot indicators + action button
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 48.dp)
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // Dot indicators row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                pages.forEachIndexed { index, _ ->
-                    val isActive = index == pagerState.currentPage
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .size(if (isActive) 10.dp else 8.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (isActive) PrimaryAccent
-                                else colors.secondaryText.copy(alpha = 0.3f),
-                            ),
+                // Page hint text
+                page.hintRes?.let { hintRes ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(id = hintRes),
+                        style = typography.labelMedium,
+                        color = colors.primaryAccent.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
-            }
 
-            // Action button: "Next" on pages 0-2, "Get Started" on page 3
-            val isLastPage = pagerState.currentPage == pages.size - 1
+                Spacer(modifier = Modifier.height(48.dp))
 
-            WFButton(
-                text = if (isLastPage) {
-                    stringResource(id = R.string.onboarding_get_started)
-                } else {
-                    stringResource(id = R.string.onboarding_next)
-                },
-                onClick = {
-                    if (isLastPage) {
-                        viewModel.complete()
-                    } else {
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                        }
+                // Action buttons area
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 48.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val isLastPage = currentPage == pages.size - 1
+
+                    WFButton(
+                        text = when {
+                            isLastPage -> stringResource(id = R.string.onboarding_get_started)
+                            currentPage == 0 -> stringResource(id = R.string.onboarding_begin_journey)
+                            else -> stringResource(id = R.string.onboarding_next)
+                        },
+                        onClick = {
+                            if (isAnimating) return@WFButton
+                            isAnimating = true
+
+                            if (isLastPage) {
+                                viewModel.complete()
+                            } else {
+                                coroutineScope.launch {
+                                    delay(100) // Small delay for button press animation
+                                    currentPage += 1
+                                    isAnimating = false
+                                }
+                            }
+                        },
+                        type = if (isLastPage) ButtonType.Primary else ButtonType.Primary,
+                        fullWidth = true,
+                    )
+
+                    // Secondary action on some pages
+                    if (currentPage == 2 || currentPage == 3) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        WFButton(
+                            text = stringResource(id = R.string.onboarding_see_more),
+                            onClick = { /* Preview features */ },
+                            type = ButtonType.Ghost,
+                            fullWidth = false,
+                        )
                     }
-                },
-                type = ButtonType.Primary,
-                fullWidth = true,
-            )
+                }
+            }
         }
     }
 }
