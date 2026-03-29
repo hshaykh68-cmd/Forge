@@ -680,7 +680,7 @@ fun FloatingParticles() {
 
     val time by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 2f * PI,
+        targetValue = (2 * PI).toFloat(),
         animationSpec = infiniteRepeatable(
             animation = tween(20000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
