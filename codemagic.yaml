@@ -1,0 +1,67 @@
+# ================================================================
+# WakeForge - Codemagic CI/CD Configuration
+# ================================================================
+
+workflows:
+  debug:
+    name: WakeForge Debug Build
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+        - pattern: develop
+          include: true
+        - pattern: feature/*
+          include: true
+
+    scripts:
+      - name: Make gradlew executable
+        script: chmod +x gradlew
+
+      - name: Download Android dependencies
+        script: ./gradlew --no-daemon androidDependencies
+
+      - name: Run unit tests
+        script: ./gradlew --no-daemon testDebugUnitTest --stacktrace
+
+      - name: Build debug APK
+        script: ./gradlew --no-daemon assembleDebug --stacktrace
+
+    artifacts:
+      - build/outputs/apk/debug/*.apk
+
+  release:
+    name: WakeForge Release Build
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+        - pattern: release/*
+          include: true
+      tag_patterns:
+        - pattern: "v[0-9]+\\.[0-9]+\\.[0-9]+"
+          include: true
+
+    scripts:
+      - name: Make gradlew executable
+        script: chmod +x gradlew
+
+      - name: Download Android dependencies
+        script: ./gradlew --no-daemon androidDependencies
+
+      - name: Run lint checks
+        script: ./gradlew --no-daemon lintRelease --stacktrace
+
+      - name: Run unit tests
+        script: ./gradlew --no-daemon testReleaseUnitTest --stacktrace
+
+      - name: Build release APK
+        script: ./gradlew --no-daemon assembleRelease --stacktrace
+
+    artifacts:
+      - build/outputs/apk/release/*.apk
